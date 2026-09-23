@@ -21,10 +21,6 @@
     >
   </a>
 
-  <h3>
-    <a href="https://drive.google.com/file/d/1P2urXg2kRex2VFlK0yRc6TaLwbIDX4q7/view?usp=drive_link" target="_blank">
-      Code Review
-    </a>
-  </h3>
+<p>Click the image to view video</p>
 
 </div>

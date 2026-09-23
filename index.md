@@ -2,7 +2,7 @@
 
   <a href="https://drive.google.com/file/d/1P2urXg2kRex2VFlK0yRc6TaLwbIDX4q7/view?usp=drive_link" target="_blank">
     <img 
-      src="https://drive.google.com/file/d/1IcJXQSPPMXyUb2aPZfPWX1E5VR-L3JTF/view?usp=sharing"
+      src="assets/Screenshot 2026-09-23 094209.png"
       alt="Code Review Video"
       style="
         width: 100%;

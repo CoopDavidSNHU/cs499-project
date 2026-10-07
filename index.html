@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ePortfolio</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<style>
+  body { max-width: 800px; margin: 2rem auto; padding: 0 1rem; font-family: Arial, sans-serif; line-height: 1.6; }
+  pre { overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<h1>Cooper David - ePortfolio</h1>
+<p>
+  This portfolio shows two projects I built in earlier courses and then enhanced. For each one, I explain what the
+  project does, how I improved it, and include code highlights.
+</p>
+
+<hr>
+
+<h2>Professional Self-Assessment</h2>
+<p>
+  [INSERT PROFESSIONAL SELF-ASSESSMENT HERE.]
+</p>
+
+<div style="text-align: center; margin: 30px 0;">
+
+<h2>Code Review</h2>
+<p>
+    This video shows my previous projects and how they work,
+    as well as me explaining how I might be able to improve
+    them in future enhancements I will be making throughout my
+    CS-499 course.
+  </p>
+
+  <a href="https://drive.google.com/file/d/1P2urXg2kRex2VFlK0yRc6TaLwbIDX4q7/view?usp=drive_link" target="_blank">
+    <img 
+      src="assets/Screenshot 2026-09-23 094209.png"
+      alt="Code Review Video"
+      style="
+        width: 100%;
+        max-width: 700px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      "
+    >
+  </a>
+
+<p>Click the image to view video</p>
+
+</div>
+
+<hr>
+
+<h2>Weight Tracker Android App</h2>
+<p><em>Java, Android Studio, SQLite</em></p>
+<p>
+  An Android app where users register or log in (or continue as a guest), record their weight each day, and receive
+  SMS notifications. Data is stored in SQLite through a <code>DatabaseHelper</code> class. The main screens are
+  <code>LoginActivity</code>, <code>DataDisplayActivity</code>, and <code>SmsPermissionsActivity</code>.
+</p>
+
+<h3>Enhancement 1: Software Design and Engineering</h3>
+<p><em>Narrative for Enhancement 1: <a href="https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-3-Assessment-CS-499.pdf">https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-3-Assessment-CS-499.pdf</a></em></p>
+<p>
+  The original app opened the weight screen without knowing who was using it, so every account and every guest read
+  and wrote the same rows. I added a <code>UserSession</code> class that owns the answer to "who is logged in."
+  Exactly one session is active at a time, it is created only by a successful login or a guest login, and it is
+  cleared on logout. <code>LoginActivity</code> establishes the session before <code>DataDisplayActivity</code>
+  opens, and the weight screen loads only that user's records and deletes by the ID stored on each
+  <code>WeightRecord</code> instead of parsing text from the screen. Guest data is temporary and is cleared when
+  the session ends.
+</p>
+
+<p><strong>UserSession.java (comments trimmed)</strong></p>
+<pre><code class="language-java">public final class UserSession {
+
+    // User ID used for rows that belong to a temporary guest session
+    public static final int GUEST_USER_ID = -100;
+
+    /// This means no one is logged in
+    public static final int NO_USER_ID = -1;
+
+    private static UserSession instance;
+
+    private int userId = NO_USER_ID;
+    private String username;
+    private boolean guest;
+
+    private UserSession() {
+        // Created only through getInstance().
+    }
+
+    public static synchronized UserSession getInstance() {
+        if (instance == null) {
+            instance = new UserSession();
+        }
+        return instance;
+    }
+
+    public void startRegisteredSession(int userId, String username) {
+        if (userId &lt;= 0) {
+            throw new IllegalArgumentException("A registered session needs a real user ID");
+        }
+        this.userId = userId;
+        this.username = username;
+        this.guest = false;
+    }
+
+    public void startGuestSession() {
+        this.userId = GUEST_USER_ID;
+        this.username = "Guest";
+        this.guest = true;
+    }
+
+    public void endSession(DatabaseHelper databaseHelper) {
+        if (guest &amp;&amp; databaseHelper != null) {
+            databaseHelper.clearGuestData();
+        }
+        userId = NO_USER_ID;
+        username = null;
+        guest = false;
+    }
+
+    // True when a registered user or a guest is currently logged in
+    public boolean isActive() {
+        return userId != NO_USER_ID;
+    }
+
+    public boolean isGuest() {
+        return guest;
+    }
+
+    // True when the session belongs to a real account in user_data
+    public boolean isRegisteredUser() {
+        return isActive() &amp;&amp; !guest;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+}</code></pre>
+
+<p><strong>LoginActivity.java (excerpt)</strong></p>
+<pre><code class="language-java">@Override
+protected void onResume() {
+    super.onResume();
+
+    // Reaching the login screen means no one is logged in. Clearing here
+    // covers logout, so the next person to sign
+    // in cannot get the previous session.
+    UserSession.getInstance().endSession(databaseHelper);
+    editTextPassword.setText("");
+}</code></pre>
+<pre><code class="language-java">// Registered login: validate, look up the ID, open the session
+private void loginUser() {
+    String username = editTextUsername.getText().toString().trim();
+    String password = editTextPassword.getText().toString();
+
+    if (username.isEmpty() || password.isEmpty()) {
+        Toast.makeText(this, "Enter a username and password", Toast.LENGTH_SHORT).show();
+        return;
+    }
+
+    int userId = databaseHelper.getUserIdForCredentials(username, password);
+    if (userId == UserSession.NO_USER_ID) {
+        Toast.makeText(this, "Invalid username or password", Toast.LENGTH_SHORT).show();
+        return;
+    }
+
+    UserSession.getInstance().startRegisteredSession(userId, username);
+    openDataDisplayActivity();
+}
+
+// Guest login: creates a temporary session that is never tied to an account
+private void loginAsGuest() {
+    UserSession.getInstance().startGuestSession();
+
+    // Start clean so one guest never sees a previous guest's entries.
+    databaseHelper.clearGuestData();
+
+    Toast.makeText(this, "Guest session started. Entries are not saved.",
+            Toast.LENGTH_SHORT).show();
+    openDataDisplayActivity();
+}</code></pre>
+
+<p><strong>DataDisplayActivity.java (excerpt)</strong></p>
+<pre><code class="language-java">session = UserSession.getInstance();
+
+// No session means this screen was reached without logging in.
+if (!session.isActive()) {
+    Toast.makeText(this, "Please log in first", Toast.LENGTH_SHORT).show();
+    finish();
+    return;
+}</code></pre>
+<pre><code class="language-java">// Loads only the records that belong to the active session
+private void loadRecords() {
+    weightRecords.clear();
+    weightRecords.addAll(databaseHelper.getWeightRecords(session.getUserId()));
+    WeightRecordSorter.sortChronologically(weightRecords);
+    adapter.notifyDataSetChanged();
+}</code></pre>
+<pre><code class="language-java">builder.setItems(displayItems, (dialog, which) -&gt; {
+    // The selected object already knows its database ID; nothing is
+    // parsed back out of the displayed text.
+    WeightRecord selected = weightRecords.get(which);
+    boolean deleted = databaseHelper.deleteWeightRecord(
+            selected.getId(), session.getUserId());
+
+    Toast.makeText(this, deleted ? "Data deleted" : "Could not delete that entry",
+            Toast.LENGTH_SHORT).show();
+    loadRecords();
+});</code></pre>
+<pre><code class="language-java">// Ends the session (while also clearing guest data) and returns to the login screen
+private void logout() {
+    session.endSession(databaseHelper);
+    finish();
+}</code></pre>
+
+<p><strong>Code highlights</strong></p>
+<ul>
+  <li>Registered sessions require a real user ID, and guests get a reserved ID (<code>GUEST_USER_ID</code>), so guest rows never mix with account rows.</li>
+  <li>Login code builds the session first (<code>startRegisteredSession</code> or <code>startGuestSession</code>), then opens the data screen with no intent extras needed.</li>
+  <li>The data screen checks <code>session.isActive()</code> and exits if someone reached it without logging in.</li>
+  <li><code>loadRecords()</code> asks the database only for records that belong to <code>session.getUserId()</code>.</li>
+  <li>Deleting uses <code>selected.getId()</code> from the record object, and the user ID is passed along too, so only the current user's data can be removed.</li>
+  <li><code>endSession()</code> clears guest rows before resetting the session, and the login screen calls it in <code>onResume()</code>, so logout and fresh launches both start with no active user.</li>
+</ul>
+
+<h3>Enhancement 2: Algorithms and Data Structures</h3>
+<p><em>Narrative for Enhancement 2: <a href="https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-4-Assessment-CS-499.pdf">https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-4-Assessment-CS-499.pdf</a></em></p>
+<p>
+  The weight history was shown in whatever order SQLite returned rows, which is insertion order rather than date
+  order. I added a <code>WeightRecordSorter</code> class that sorts a list of <code>WeightRecord</code> objects by
+  parsing each record's date. It repeats passes over the list, swapping neighboring records that are out of order,
+  until a pass makes no swaps (a bubble sort). That is O(n^2) in the worst case, which is fine for a personal
+  weight history. Dates that cannot be parsed are sorted to the end instead of crashing the sort or disappearing
+  from the list.
+</p>
+
+<p><strong>WeightRecordSorter.java (excerpt)</strong></p>
+<pre><code class="language-java">public static void sortChronologically(List&lt;WeightRecord&gt; records) {
+    if (records == null || records.size() &lt; 2) {
+        return;
+    }
+
+    boolean exchanged;
+    do {
+        exchanged = false;
+        // FOR each record in the list: compare its date with the next
+        // record's date, if the current one is later, exchange them.
+        for (int i = 0; i &lt; records.size() - 1; i++) {
+            Date currentDate = parseDate(records.get(i).getDate());
+            Date nextDate = parseDate(records.get(i + 1).getDate());
+
+            if (shouldSwap(currentDate, nextDate)) {
+                WeightRecord temp = records.get(i);
+                records.set(i, records.get(i + 1));
+                records.set(i + 1, temp);
+                exchanged = true;
+
+            }
+        }
+        // Continue comparisons until records are ordered oldest to newest.
+    } while (exchanged);
+}
+
+private static boolean shouldSwap(Date current, Date next) {
+    if (current == null) {
+        return next != null;
+    }
+    if (next == null) {
+        return false;
+    }
+    return current.before(next);
+}
+
+private static Date parseDate(String dateText) {
+    if (dateText == null) {
+        return null;
+    }
+    // yyyy-mm-dd matches the format used by the add data dialog's hint
+    // and by already existing entries (following format: "2026-10-02").
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+    format.setLenient(false);
+    try {
+        return format.parse(dateText.trim());
+    } catch (ParseException e) {
+        return null;
+    }
+}</code></pre>
+
+<p><strong>Code highlights</strong></p>
+<ul>
+  <li>The <code>do while</code> loop keeps making passes until the list is fully ordered.</li>
+  <li><code>shouldSwap()</code> compares the two dates and puts unparseable dates last, so bad data never breaks the list.</li>
+  <li><code>parseDate()</code> uses a strict <code>yyyy-MM-dd</code> format that matches the add-entry dialog's hint.</li>
+  <li>The sorter is a small utility class called from one place, <code>loadRecords()</code>, so the screen code stays simple.</li>
+</ul>
+
+<hr>
+
+<h2>Animal Shelter Dashboard</h2>
+<p><em>Python, MongoDB, Dash</em></p>
+<p>
+  This project loads animal shelter data from a CSV into MongoDB and displays it in an interactive Dash dashboard.
+  <code>animal_shelter.py</code> contains a CRUD class that talks to the database, and <code>dashboard.py</code>
+  builds the dashboard and filters.
+</p>
+
+<h3>Enhancement 3: Databases</h3>
+<p><em>Narrative for Enhancement 3: <a href="https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-5-Assessment-CS-499.pdf">https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-5-Assessment-CS-499.pdf</a></em></p>
+<p>
+  I made four improvements to the database layer without rewriting the project. First, credentials now come from
+  environment variables instead of being hard-coded, with a clear error that names any missing variable (never its
+  value). Second, I added indexes for the fields the dashboard filters on: one compound index ordered to match the
+  rescue queries, plus single-field indexes for breed and age. Third, the rescue-type rules moved out of the
+  dashboard and into the database layer. Fourth, filtering and the age calculations moved out of Pandas and into a
+  MongoDB aggregation pipeline, so the database returns only the records and fields the dashboard needs.
+</p>
+
+<p><strong>animal_shelter.py: rescue rules (moved from the dashboard)</strong></p>
+<pre><code class="language-python"># ---------------------------------------------------------------------------
+# Rescue-type search rules
+# The dashboard used to hold these lists and filter in Pandas. They now live in
+# the database layer so MongoDB does the filtering.
+# max_weeks = None means "no upper age limit" (same as the original Disaster filter).
+# ---------------------------------------------------------------------------
+RESCUE_FILTERS = {
+    "Water": {
+        "breeds": [
+            "Labrador Retriever Mix",
+            "Chesapeake Bay Retriever",
+            "Newfoundland",
+        ],
+        "sex": "Female",
+        "min_weeks": 26,
+        "max_weeks": 156,
+    },
+    "Mountain": {
+        "breeds": [
+            "German Shepherd",
+            "Alaskan Malamute",
+            "Old English Sheepdog",
+            "Siberian Husky",
+            "Rottweiler",
+        ],
+        "sex": "Intact Male",
+        "min_weeks": 26,
+        "max_weeks": 156,
+    },
+    "Disaster": {
+        "breeds": [
+            "Doberman Pinscher",
+            "German Shepherd",
+            "Golden Retriever",
+            "Bloodhound",
+            "Rottweiler",
+        ],
+        "sex": "Intact Male",
+        "min_weeks": 20,
+        "max_weeks": None,
+    },
+}</code></pre>
+
+<p><strong>animal_shelter.py: connection (excerpt)</strong></p>
+<pre><code class="language-python">    def __init__(self):
+        # Credentials come from environment variables, never from source code.
+        # .strip() guards against stray spaces copied into the variable.
+        USER = (os.environ.get("MONGO_USER") or "").strip()
+        PASS = (os.environ.get("MONGO_PASSWORD") or "").strip()
+        HOST = (os.environ.get("MONGO_HOST") or "").strip()
+        PORT = (os.environ.get("MONGO_PORT") or "").strip()  # optional, isn't used with mongodbAtlas
+
+        DB = 'NEWAAC'
+        COL = 'animals'
+
+        # Report which variables are missing (names only, never values)
+        missing = [
+            name for name, value in (
+                ("MONGO_USER", USER),
+                ("MONGO_PASSWORD", PASS),
+                ("MONGO_HOST", HOST),
+            ) if not value
+        ]
+        if missing:
+            raise ValueError(
+                "MongoDB environment variables are not configured: "
+                + ", ".join(missing)
+            )
+
+        # Hide special characters
+        user = quote_plus(USER)
+        password = quote_plus(PASS)
+
+        if PORT:
+            # Standard connection (local or self-hosted MongoDB)
+            uri = f"mongodb://{user}:{password}@{HOST}:{PORT}/"
+        else:
+            # Atlas style connection (host only, no port allowed)
+            uri = f"mongodb+srv://{user}:{password}@{HOST}/?appName=Cluster0"
+
+        # Initialize Connection (fail fast after 5 seconds if the server is unreachable)
+        self.client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+        self.database = self.client[DB]
+        self.collection = self.database[COL]
+
+        # Make sure the indexes used by the dashboard queries exist
+        self._ensure_indexes()</code></pre>
+
+<p><strong>animal_shelter.py: indexes</strong></p>
+<pre><code class="language-python">    def _ensure_indexes(self):
+        """
+        Create indexes for the fields the dashboard filters on.
+        """
+        try:
+            # Compound index is ordered in this way: exact match -&gt; $in match -&gt; range.
+            # That order matches the rescue queries, so MongoDB can narrow
+            # the search at each step instead of scanning every document.
+            # It also serves queries on sex_upon_outcome alone,
+            # so a separate single field sex index wouldn't be needed.
+            self.collection.create_index(
+                [
+                    ("sex_upon_outcome", ASCENDING),
+                    ("breed", ASCENDING),
+                    ("age_upon_outcome_in_weeks", ASCENDING),
+                ],
+                name="rescue_compound_idx",
+            )
+
+            # Single field indexes for queries that don't use the compound prefix
+            self.collection.create_index(
+                [("breed", ASCENDING)], name="breed_idx"
+            )
+            self.collection.create_index(
+                [("age_upon_outcome_in_weeks", ASCENDING)], name="age_weeks_idx"
+            )
+        except Exception as e:
+            # For example, the database user might not have createIndex privileges
+            print(f"Could not confirm indexes: {e}")</code></pre>
+
+<p><strong>animal_shelter.py: aggregation pipeline</strong></p>
+<pre><code class="language-python">    @staticmethod
+    def _build_match(rescue_type):
+        """Translate a rescue type into a MongoDB filter ({} matches everything)."""
+        rule = RESCUE_FILTERS.get(rescue_type)
+
+        # "All", None, or an unknown type -&gt; empty filter
+        if rule is None:
+            return {}
+
+        # Age range: always a lower bound, upper bound only if defined
+        age = {"$gte": rule["min_weeks"]}
+        if rule["max_weeks"] is not None:
+            age["$lte"] = rule["max_weeks"]
+
+        return {
+            "sex_upon_outcome": rule["sex"],
+            "breed": {"$in": rule["breeds"]},
+            "age_upon_outcome_in_weeks": age,
+        }
+
+    def build_pipeline(self, rescue_type=None):
+        """
+        Build the aggregation pipeline:
+          $match   - filter documents
+          $project - keep only needed fields and calculate age values
+        """
+        # Safely convert the stored age to a number (null if conversion fails)
+        weeks = {
+            "$convert": {
+                "input": "$age_upon_outcome_in_weeks",
+                "to": "double",
+                "onError": None,
+                "onNull": None,
+            }
+        }
+
+        # Start by excluding _id, then include only the dashboard fields
+        project = {"_id": 0}
+        for field in DASHBOARD_FIELDS:
+            project[field] = 1
+
+        # Calculated fields, ran by MongoDB instead of Pandas
+        project["age_in_weeks"] = weeks
+        project["age_in_years"] = {
+            "$round": [{"$divide": [weeks, WEEKS_PER_YEAR]}, 1]
+        }
+
+        return [
+            {"$match": self._build_match(rescue_type)},
+            {"$project": project},
+        ]
+
+    def read_rescue_filter(self, rescue_type=None):
+        """
+        Server side filtering and age calculation for the dashboard.
+        rescue_type: "Water", "Mountain", "Disaster", or None/"All" for everything.
+        Returns a list of dictionaries the dashboard can use directly.
+        """
+        try:
+            return list(self.collection.aggregate(self.build_pipeline(rescue_type)))
+        except Exception as e:
+            print(f"An error has occurred: {e}")
+            return []  # Empty list keeps the dashboard from crashing</code></pre>
+
+<p><strong>Code highlights</strong></p>
+<ul>
+  <li>The credentials come from <code>os.environ</code> and <code>quote_plus</code> escapes special characters, so nothing sensitive lives in the source code or on GitHub.</li>
+  <li>The connection works for both a standard host and port and an Atlas-style URI, and fails fast after 5 seconds if the server is unreachable.</li>
+  <li>The compound index is ordered exact match, then <code>$in</code> match, then range, which matches how the rescue queries filter and also covers queries on sex alone.</li>
+  <li><code>_build_match()</code> turns each rescue type into a MongoDB filter, with <code>max_weeks = None</code> meaning no upper age limit.</li>
+  <li><code>$match</code> runs first so MongoDB can use the indexes, and <code>$project</code> keeps only the dashboard fields and calculates <code>age_in_weeks</code> and <code>age_in_years</code> on the server.</li>
+  <li>If a query fails, <code>read_rescue_filter()</code> returns an empty list so the dashboard doesn't crash.</li>
+  <li>Testing plan: compare the original query, the indexed query, and the aggregation, checking records, fields, filtering, and dashboard behavior.</li>
+</ul>
+
+<hr>
+
+<h2>Code Links</h2>
+<ul>
+  <li>Weight Tracker Android App (original): <a href="https://github.com/Sunrise5545/CS-360-Project">https://github.com/Sunrise5545/CS-360-Project</a></li>
+  <li>Weight Tracker Android App (enhanced): <a href="https://github.com/CoopDavidSNHU/Project-2-CS-360-Enhanced">https://github.com/CoopDavidSNHU/Project-2-CS-360-Enhanced</a></li>
+  <li>Animal Shelter Dashboard (original): <a href="https://github.com/Sunrise5545/CS-340-Project">https://github.com/Sunrise5545/CS-340-Project</a></li>
+  <li>Animal Shelter Dashboard (enhanced): <a href="https://github.com/CoopDavidSNHU/CS-340-Project-main-Enhanced/tree/main">https://github.com/CoopDavidSNHU/CS-340-Project-main-Enhanced/tree/main</a></li>
+</ul>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

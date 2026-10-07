@@ -6,11 +6,32 @@ layout: default
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 
 <h2>Professional Self-Assessment</h2>
-<p>
-  [INSERT PROFESSIONAL SELF-ASSESSMENT HERE.]
-</p>
+<section id="self-assessment">
+  <h4>My Journey Through the Program</h4>
+
+  <p>Finishing this program and building my ePortfolio helped me see what I'm good at and where I want to go. I'm interested in IT support, data analysis, and eventually software engineering. What ties those together is that I like making sure data and software can be trusted.</p>
+
+  <p>A few courses outside my artifacts shaped that. In CS-320, I learned JUnit testing, which taught me that code that runs isn't necessarily correct. Testing normal input, edge cases, and bad input is part of the job. In DAT-325, I learned data validation, and in DAT-375, I learned data analysis techniques. Both were part of my data analysis concentration, and they gave me a much better understanding of the data I'll work with in any of the roles I'm aiming for.</p>
+
+  <p>While I haven’t specifically coded with other people, I've worked with a team in my Data Analyst Internship to help out the departments of Maverik handle and translate their data. There I built data dashboards using Google Looker, SQL, and Excel to turn messy data into something the non-technical teams could read and use. I had to figure out what information they needed and present it clearly, and that taught me that my work is only useful if the people I'm working with can understand it.</p>
+
+  <p>While I haven't worked with a client directly on a project, I understand what it takes for a client to be satisfied with my work. For example, a small business owner asks me for a way to track customer orders. They probably won't know terms like "database" or "query," so I'd focus on what they need to do, such as finding an order or seeing what's late. I'd explain my choices in plain language and check in with them as I go, so I'm not guessing what they want.</p>
+
+  <p>For the data structures and algorithms I’ve worked with, I learned to choose a data structure or algorithm that fits the problem instead of just picking whatever works. I think about how much data there is and how the program will really be used. With that being said, when it comes to software engineering and databases, I've learned to organize code so each part has a clear job, and to improve existing code without starting over. I've also worked with databases from the code side and the data side, and my data analysis concentration helped me see why well organized data matters. I also try to build security in from the start. That means keeping passwords and credentials out of the code, controlling who can see what data, and validating input so bad data doesn't get through and is handled properly.</p>
+
+  <p>My three artifacts come from two projects that I chose to enhance instead of rewriting. I did this because in a real job you'll often improve existing code, so I wanted to show I can find weaknesses and fix them. Each artifact covers a different area of computer science.</p>
+
+  <p><strong>Software Design and Engineering (Android Weight-Tracking App):</strong> This Java app tracks daily weight and supports registered and guest logins. I added consistent session management so each user's data follows them from login to display, and guest data is cleared when the session ends. I also changed weight entries into structured records so deleting uses a stored ID instead of reading the screen text.</p>
+
+  <p><strong>Algorithms and Data Structures (Same Android App):</strong> I replaced parallel lists with a collection of WeightRecord objects and added insertion sort to show weight history from oldest to newest. Insertion sort's O(n^2) worst case is fine for the small number of entries someone logs, and it keeps the code simple.</p>
+
+  <p><strong>Databases (Python/MongoDB Animal Shelter Dashboard):</strong> This dashboard displays shelter data from MongoDB. I moved credentials into environment variables, added indexes on commonly filtered fields, and replaced Pandas filtering with a server-side aggregation pipeline. This one connects most to my data analysis background because it's about getting the right data efficiently and securely.</p>
+
+  <p>Together, these artifacts show that I can write and organize code, pick fitting algorithms, work with databases, and think about security. They also show how I approach improvements. I can better understand what's there, make a focused change, and test that it works. The sections below walk through each artifact in more detail.</p>
+</section>
 
 <div style="text-align: center; margin: 30px 0;">
+    <hr>
 
 <h2>Code Review</h2>
 <p>

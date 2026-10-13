@@ -242,7 +242,7 @@ private void logout() {
 <h3>Enhancement 2: Algorithms and Data Structures</h3>
 <p><em>Narrative for Enhancement 2: <a href="https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-4-Assessment-CS-499.pdf">https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-4-Assessment-CS-499.pdf</a></em></p>
 <p>
-  The weight history was shown in whatever order SQLite returned rows, which is bubble order rather than date
+  The weight history was shown in whatever order SQLite returned rows, which is insertion order rather than date
   order. I added a <code>WeightRecordSorter</code> class that sorts a list of <code>WeightRecord</code> objects by
   parsing each record's date. It repeats passes over the list, swapping neighboring records that are out of order,
   until a pass makes no swaps (a bubble sort). That is O(n^2) in the worst case, which is fine for a personal

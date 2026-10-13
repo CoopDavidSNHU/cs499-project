@@ -23,7 +23,7 @@ layout: default
 
   <p><strong>Software Design and Engineering (Android Weight-Tracking App):</strong> This Java app tracks daily weight and supports registered and guest logins. I added consistent session management so each user's data follows them from login to display, and guest data is cleared when the session ends. I also changed weight entries into structured records so deleting uses a stored ID instead of reading the screen text.</p>
 
-  <p><strong>Algorithms and Data Structures (Same Android App):</strong> I replaced parallel lists with a collection of WeightRecord objects and added insertion sort to show weight history from oldest to newest. Insertion sort's O(n^2) worst case is fine for the small number of entries someone logs, and it keeps the code simple.</p>
+  <p><strong>Algorithms and Data Structures (Same Android App):</strong> I replaced parallel lists with a collection of WeightRecord objects and added bubble sort to show weight history from oldest to newest. bubble sort's O(n^2) worst case is fine for the small number of entries someone logs, and it keeps the code simple.</p>
 
   <p><strong>Databases (Python/MongoDB Animal Shelter Dashboard):</strong> This dashboard displays shelter data from MongoDB. I moved credentials into environment variables, added indexes on commonly filtered fields, and replaced Pandas filtering with a server-side aggregation pipeline. This one connects most to my data analysis background because it's about getting the right data efficiently and securely.</p>
 
@@ -242,7 +242,7 @@ private void logout() {
 <h3>Enhancement 2: Algorithms and Data Structures</h3>
 <p><em>Narrative for Enhancement 2: <a href="https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-4-Assessment-CS-499.pdf">https://github.com/CoopDavidSNHU/cs499-project/blob/main/assets/Module-4-Assessment-CS-499.pdf</a></em></p>
 <p>
-  The weight history was shown in whatever order SQLite returned rows, which is insertion order rather than date
+  The weight history was shown in whatever order SQLite returned rows, which is bubble order rather than date
   order. I added a <code>WeightRecordSorter</code> class that sorts a list of <code>WeightRecord</code> objects by
   parsing each record's date. It repeats passes over the list, swapping neighboring records that are out of order,
   until a pass makes no swaps (a bubble sort). That is O(n^2) in the worst case, which is fine for a personal
